@@ -121,14 +121,26 @@ sed -i 's/#Port 22/Port 22/g' /etc/ssh/sshd_config
 /etc/init.d/ssh restart
 
 # install dropbear
-apt -y install dropbear
-cat > /etc/default/dropbear <<-END
-DROPBEAR_PORT=22
-DROPBEAR_EXTRA_ARGS="-p 109 -p 442"
-END
+apt update -y
+apt install -y dropbear
+
+# tulis ulang konfigurasi dropbear
+cat > /etc/default/dropbear <<'EOF'
+NO_START=0
+DROPBEAR_PORT=442
+DROPBEAR_EXTRA_ARGS="-p 109 -p 22"
+DROPBEAR_BANNER=""
+EOF
+
+# pastikan shell dibatasi untuk user tertentu (jika diperlukan)
+grep -qxF "/bin/false" /etc/shells || echo "/bin/false" >> /etc/shells
+grep -qxF "/usr/sbin/nologin" /etc/shells || echo "/usr/sbin/nologin" >> /etc/shells
+
+# enable & restart dropbear
+systemctl enable dropbear
 systemctl restart dropbear
 
-# install squid for debian 9,10 & ubuntu 20.04
+# install squid for debian & ubuntu
 apt -y install squid3
 # install squid for debian 11
 apt -y install squid
