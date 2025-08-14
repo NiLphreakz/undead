@@ -1,4 +1,20 @@
 #!/bin/bash
+# ensure running as root
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Run as root: sudo $0"
+  exit 1
+fi
+
+# ensure sbin paths in PATH (cron/sudo tanpa -i sering pecah PATH)
+export PATH="$PATH:/usr/sbin:/sbin:/bin:/usr/bin"
+
+# ensure user management tools exist
+if ! command -v useradd >/dev/null 2>&1 || ! command -v chage >/dev/null 2>&1; then
+  echo "Installing required packages for user management..."
+  apt update -y
+  apt install -y passwd adduser
+fi
+
 MYIP=$(curl -sS ipv4.icanhazip.com)
 # PROVIDED
 creditt=$(cat /root/provided)
