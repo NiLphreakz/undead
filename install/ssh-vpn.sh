@@ -136,6 +136,27 @@ EOF
 grep -qxF "/bin/false" /etc/shells || echo "/bin/false" >> /etc/shells
 grep -qxF "/usr/sbin/nologin" /etc/shells || echo "/usr/sbin/nologin" >> /etc/shells
 
+# Systemd Dropbear Service
+tee /etc/systemd/system/dropbear.service > /dev/null <<'EOF'
+[Unit]
+Description=Lightweight SSH server
+Documentation=man:dropbear(8)
+After=network.target
+
+[Service]
+Environment=DROPBEAR_PORT=22 DROPBEAR_RECEIVE_WINDOW=65536
+EnvironmentFile=-/etc/default/dropbear
+
+# Clear previous ExecStart and set new one that includes banner
+ExecStart=/usr/sbin/dropbear -EF -p "$DROPBEAR_PORT" -W "$DROPBEAR_RECEIVE_WINDOW" -b "$DROPBEAR_BANNER" $DROPBEAR_EXTRA_ARGS
+
+KillMode=process
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
 # enable & restart dropbear
 systemctl enable dropbear
 systemctl restart dropbear
